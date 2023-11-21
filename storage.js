@@ -13,6 +13,8 @@ app.use(cors());
 
 const scannedData = [];
 const otherScannedData = [];
+let externalCartData = [];
+let externalWalletAddress = null;
 
 function arraysAreEqual(arr1, arr2) {
   if (arr1.length !== arr2.length) {
@@ -40,6 +42,12 @@ app.post('/scan', (req, res) => {
   const { cart, walletAddress } = req.body;
 
   if (cart && Array.isArray(cart) && walletAddress) {
+    const cartData = { cart };
+    const addressData = { walletAddress };
+
+    externalCartData.push(cartData); // Store the cart data into the array
+    externalWalletAddress = addressData;
+
     scannedData.push({ cart, walletAddress });
     console.log(`Received and stored scanned data: ${JSON.stringify({ cart, walletAddress })}`);
 
@@ -50,7 +58,7 @@ app.post('/scan', (req, res) => {
 
     res.status(200).json({ message: 'Data received and stored.' });
   } else {
-    res.status(400).json({ message: 'Invalid data received. Expecting an object with "cart" as an array and "walletAddress" as a string.' });
+    res.status(400).json({ message: 'Invalid data received.' });
   }
 });
 
@@ -68,13 +76,40 @@ app.post('/scan2', (req, res) => {
 
     res.status(200).json({ message: 'Data received and stored in otherScannedData.' });
   } else {
-    res.status(400).json({ message: 'Invalid data received. Expecting an array in the format { "cart": [...] }' });
+    res.status(400).json({ message: 'Invalid data received.' });
+  }
+});
+
+app.get('/external/cart-data', (req, res) => {
+  if (externalCartData.length > 0) {
+    res.status(200).json(externalCartData);
+  } else {
+    res.status(404).json({ message: 'Cart data not available yet.' });
+  }
+});
+
+app.get('/external/cart-data/total-entries', (req, res) => {
+  if (externalCartData.length > 0) {
+    const amount = externalCartData.length;
+    const extendedAmount = `${amount}000000000000000000`; // Concatenate 18 zeros
+    res.status(200).json({ amount: extendedAmount });
+  } else {
+    res.status(404).json({ message: 'Cart data not available yet.' });
+  }
+});
+
+
+app.get('/external/wallet-address', (req, res) => {
+  if (externalWalletAddress) {
+    res.status(200).json(externalWalletAddress);
+  } else {
+    res.status(404).json({ message: 'Wallet address not available yet.' });
   }
 });
 
 app.get('/scanned-data-count-multiplied', (req, res) => {
   const dataCount = scannedData.length - 1;
-  const multipliedCount = dataCount * 5;
+  const multipliedCount = dataCount; // Retaining the existing logic
   res.status(200).json({ multipliedCount });
 });
 
