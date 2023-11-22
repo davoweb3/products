@@ -90,13 +90,21 @@ app.get('/external/cart-data', (req, res) => {
 
 app.get('/external/cart-data/total-entries', (req, res) => {
   if (externalCartData.length > 0) {
-    const amount = externalCartData.length;
-    const extendedAmount = `${amount}000000000000000000`; // Concatenate 18 zeros
+    let totalItems = 0;
+    
+    externalCartData.forEach(entry => {
+      if (entry.cart && Array.isArray(entry.cart)) {
+        totalItems += entry.cart.length;
+      }
+    });
+
+    const extendedAmount = `${totalItems}000000000000000000`; // Concatenate 18 zeros
     res.status(200).json({ amount: extendedAmount });
   } else {
     res.status(404).json({ message: 'Cart data not available yet.' });
   }
 });
+
 
 
 app.get('/external/wallet-address', (req, res) => {
